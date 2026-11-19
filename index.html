@@ -1,0 +1,1810 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0C6A77" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#09161B" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Diario di Pesca">
+  <title>Diario di Pesca</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+  <style>
+    :root {
+      color-scheme: light;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      --bg: #E9EFF1;
+      --surface: #F7FAFB;
+      --ink: #0D2229;
+      --muted: #526D77;
+      --line: #C6D5D9;
+      --accent: #0C6A77;
+      --accent-ink: #FFFFFF;
+      --catch: #B9650F;
+      --catch-ink: #FFFFFF;
+      --font-display: 'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+      --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+    html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #09161B; --surface: #102329; --ink: #E3EEF0; --muted: #8AA5AE; --line: #234049;
+        --accent: #52C3D2; --accent-ink: #04181C; --catch: #F2A24E; --catch-ink: #1E1203;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #09161B; --surface: #102329; --ink: #E3EEF0; --muted: #8AA5AE; --line: #234049;
+      --accent: #52C3D2; --accent-ink: #04181C; --catch: #F2A24E; --catch-ink: #1E1203;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    [hidden]:not([hidden=until-found i]) { display: none !important; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 400 15px/1.45 var(--font-body);
+      padding-block: 18px 48px;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+    }
+    .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+    h1 { margin: 0; font: 700 32px/1 var(--font-display); letter-spacing: .01em; text-wrap: balance; }
+    .header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+    .seg button { border: 0; background: transparent; padding: 9px 14px; font-weight: 500; min-height: 40px; }
+    .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+    .nav-tabs { display: flex; width: 100%; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+    .nav-tabs button { flex: 1; border: 0; background: transparent; padding: 10px 8px; font-weight: 600; font-size: 13.5px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-align: center; line-height: 1.2; }
+    .nav-tabs button + button { border-left: 1px solid var(--line); }
+    .nav-tabs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+    .fish-wrap { display: flex; flex-direction: column; gap: 12px; }
+    .fish-banner { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+    .fish-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+    .fish-card.is-fav-today { border-color: var(--accent); border-width: 2px; padding: 13px 15px; }
+    .fish-card.is-unfav-today { border-color: var(--catch); }
+    .fish-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+    .fish-name { font: 700 22px/1.1 var(--font-display); }
+    .fish-status { font: 600 11.5px/1 var(--font-body); padding: 4px 8px; border-radius: 6px; }
+    .fish-status.fav { background: var(--accent); color: var(--accent-ink); }
+    .fish-status.unfav { background: var(--catch); color: var(--catch-ink); }
+    .fish-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+    .wind-group { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: var(--bg); display: flex; flex-direction: column; gap: 8px; }
+    .wind-group-lbl { font: 600 11.5px/1 var(--font-body); letter-spacing: .07em; text-transform: uppercase; }
+    .wind-group-lbl.fav { color: var(--accent); }
+    .wind-group-lbl.unfav { color: var(--catch); }
+    .wind-chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; align-items: center; }
+    .wchip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 7px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--line); background: var(--surface); }
+    .wchip.fav { border-color: var(--accent); color: var(--accent); }
+    .wchip.unfav { border-color: var(--catch); color: var(--catch); }
+    .wchip button { border: 0; background: transparent; padding: 0 2px; font-size: 15px; line-height: 1; opacity: .75; }
+    .wchip button:hover { opacity: 1; }
+    .wadd-row { display: flex; gap: 6px; align-items: center; }
+    .wadd-row select { min-height: 36px; height: 36px; padding: 0 8px; font-size: 13px; background: var(--surface); flex: 1; min-width: 0; }
+    .wadd-row button { min-height: 36px; height: 36px; padding: 0 10px; font-size: 13px; flex: none; }
+
+    .winds-wrap { display: flex; flex-direction: column; gap: 14px; }
+    .compass-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+    .compass-svg { width: 220px; height: 220px; max-width: 100%; display: block; }
+    .winds-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+    .wind-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px; }
+    .wind-card.is-active { border-color: var(--accent); border-width: 2px; padding: 11px 13px; }
+    .wind-badge { width: 44px; height: 44px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none; gap: 2px; }
+    .wind-badge b { font: 700 13px/1 var(--font-display); letter-spacing: .04em; }
+    .wind-badge svg { width: 14px; height: 15px; fill: var(--accent); }
+    .wind-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .wind-title { font: 600 18px/1.1 var(--font-display); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .wind-tag { font: 600 11px/1 var(--font-body); background: var(--accent); color: var(--accent-ink); padding: 3px 6px; border-radius: 5px; }
+    .wind-dir { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .wind-desc { font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+    .mode-seg { display: flex; width: 100%; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg); }
+    .mode-seg button { flex: 1; border: 0; background: transparent; padding: 10px 12px; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: background .15s, color .15s; }
+    .mode-seg button + button { border-left: 1px solid var(--line); }
+    .mode-seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+    .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cal-head h2 { margin: 0; font: 600 24px/1 var(--font-display); text-transform: capitalize; letter-spacing: .02em; flex: 1; text-align: center; }
+    .icon-btn { width: 44px; height: 44px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; font-size: 20px; line-height: 1; }
+    .today-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 0 12px; min-height: 44px; font-size: 14px; }
+
+    .dow, .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+    .dow span { text-align: center; font: 600 12px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 2px 0 4px; }
+    .day {
+      position: relative; overflow: hidden; min-width: 0; min-height: 78px; padding: 5px 5px 4px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+      display: flex; flex-direction: column; justify-content: space-between; text-align: left;
+      background-size: cover; background-position: center;
+    }
+    .day .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2px; position: relative; z-index: 1; }
+    .day .dn { font: 600 17px/1 var(--font-display); display: flex; align-items: center; gap: 3px; }
+    .day .bot { display: flex; flex-direction: column; gap: 1px; position: relative; z-index: 1; font-variant-numeric: tabular-nums; }
+    .day .w { display: flex; align-items: center; gap: 3px; font-size: 12px; color: var(--muted); }
+    .day .t { font: 600 14px/1 var(--font-display); }
+    .day .arr { width: 9px; height: 10px; fill: currentColor; flex: none; }
+    .day .badge { font: 700 11px/1 var(--font-body); background: var(--catch); color: var(--catch-ink); border-radius: 4px; padding: 3px 4px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .day.has-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(5,15,18,.55), rgba(5,15,18,.15) 45%, rgba(5,15,18,.7)); }
+    .day.has-photo .dn, .day.has-photo .t, .day.has-photo .w { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+    .day.is-today { border-color: var(--accent); border-width: 2px; padding: 4px 4px 3px; }
+    .day[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
+    .day.future .t, .day.future .w { opacity: .85; }
+    .pad { min-height: 0; }
+
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    .panel h2 { margin: 0; font: 600 26px/1.05 var(--font-display); text-transform: capitalize; }
+    .panel h3 { margin: 0; font: 600 13px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .sub { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; }
+    .wx { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; }
+    .tile { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .tile .k { font: 600 11px/1 var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .tile .v { font: 600 28px/1 var(--font-display); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
+    .tile .v small { font: 500 14px/1 var(--font-body); color: var(--muted); }
+    .tile .s { font-size: 13px; color: var(--muted); }
+    .tile svg { flex: none; }
+    .tile .arr { width: 18px; height: 20px; fill: currentColor; }
+    .tile .s b { color: var(--ink); font-weight: 600; }
+
+    .wind-slots-box { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
+    .wind-periods { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 8px; }
+    .wperiod { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); display: flex; flex-direction: column; gap: 6px; }
+    .wperiod-title { font: 600 11px/1 var(--font-body); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+    .wslot-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 13px; font-variant-numeric: tabular-nums; padding-top: 4px; border-top: 1px dashed var(--line); }
+    .wslot-row:first-of-type { border-top: 0; padding-top: 0; }
+    .wslot-hr { font-weight: 600; color: var(--muted); min-width: 40px; }
+    .wslot-dir { display: inline-flex; align-items: center; gap: 4px; font-weight: 600; color: var(--ink); }
+    .wslot-dir .arr { width: 11px; height: 12px; fill: var(--accent); flex: none; }
+    .wslot-spd { font: 600 15px/1 var(--font-display); color: var(--ink); }
+    .wslot-spd small { font: 500 11px/1 var(--font-body); color: var(--muted); }
+    .photo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .tide-box { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--bg); display: flex; flex-direction: column; gap: 8px; }
+    .tide-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
+    .tide-events { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .tide-ev { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); }
+    .tide-ev.alta b { color: var(--accent); }
+    .tide-ev.bassa b { color: var(--catch); }
+    .tide-svg { width: 100%; height: 92px; display: block; overflow: visible; }
+
+    .times { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-top: 10px; }
+    .times .lbl, .field-lbl { font: 600 12px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    input[type="time"], input[type="text"], select {
+      border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+      padding: 0 12px; min-height: 44px; font: inherit; width: 100%;
+    }
+    input[type="time"] { width: auto; font-variant-numeric: tabular-nums; }
+    select { cursor: pointer; }
+    .dur { color: var(--muted); font-size: 14px; min-height: 44px; display: flex; align-items: center; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+    .btn { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 0 16px; min-height: 44px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); font-weight: 500; }
+    .btn.danger { border-color: var(--catch); color: var(--catch); background: transparent; }
+    .btn.sm { min-height: 38px; padding: 0 12px; font-size: 13.5px; }
+
+    .session-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .catches-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .catch-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
+    .catch-card input[type="text"], .catch-card select { background: var(--surface); }
+    .catch-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .catch-card-title { font: 600 11px/1 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .catch-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .catch-row select { flex: 1; min-width: 150px; }
+    .catch-subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+    .qty-box { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; height: 44px; flex: none; }
+    .qty-box button { width: 38px; height: 42px; border: 0; background: transparent; font-weight: 700; font-size: 18px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+    .qty-box button:hover { background: var(--bg); }
+    .qty-box span { min-width: 32px; text-align: center; font: 600 16px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+    .btn-icon-sq { width: 34px; height: 34px; min-height: 34px; padding: 0; flex: none; font-size: 16px; border-radius: 8px; }
+    .coord-row { display: flex; gap: 8px; align-items: center; }
+    .coord-row input { flex: 1; min-width: 0; }
+
+    .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+    .thumbs button { padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: var(--bg); }
+    .thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .empty { margin: 0; padding: 18px 14px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 14px; }
+    label.f { display: flex; flex-direction: column; gap: 6px; }
+    textarea { width: 100%; min-height: 88px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); padding: 10px 12px; font: inherit; }
+
+    .backup-bar {
+      background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+      padding: 12px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .backup-bar .info { font-size: 13px; color: var(--muted); }
+    .backup-bar .info b { color: var(--ink); font-weight: 600; }
+    .backup-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .lb { position: fixed; inset: 0; z-index: 20; background: rgba(4,12,15,.92); display: flex; flex-direction: column; gap: 12px;
+      padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+    .lb img { flex: 1; min-height: 0; max-width: 100%; object-fit: contain; border-radius: 8px; }
+    .lb .row { justify-content: center; }
+    .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: max(18px, env(safe-area-inset-bottom, 0px)); z-index: 30;
+      background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 14px; max-width: calc(100% - 32px); text-align: center; }
+    @media (min-width: 560px) { .day { min-height: 92px; padding: 7px 8px 6px; } .day .dn { font-size: 19px; } .day .t { font-size: 16px; } .day .w { font-size: 13px; } }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Diario di Pesca</h1>
+    <div class="header-actions">
+      <div class="seg" role="group" aria-label="Zona di pesca">
+        <button type="button" id="z-corsini" aria-pressed="true">Porto Corsini</button>
+        <button type="button" id="z-pila" aria-pressed="false">Pila (Porto Tolle)</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav-tabs" aria-label="Schermate app">
+    <button type="button" id="tab-cal" aria-pressed="true">Calendario</button>
+    <button type="button" id="tab-winds" aria-pressed="false">Rosa dei Venti</button>
+    <button type="button" id="tab-fish" aria-pressed="false">Pesci e Venti</button>
+  </nav>
+
+  <div id="view-cal" style="display:flex;flex-direction:column;gap:14px">
+    <section aria-label="Calendario">
+      <div class="cal-head">
+        <button type="button" class="icon-btn" id="prev" aria-label="Mese precedente">‹</button>
+        <h2 id="month"></h2>
+        <button type="button" class="icon-btn" id="next" aria-label="Mese successivo">›</button>
+        <button type="button" class="today-btn" id="goto-today">Oggi</button>
+      </div>
+      <div class="dow" aria-hidden="true"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section class="panel" id="detail" aria-live="polite"></section>
+  </div>
+
+  <section class="winds-wrap" id="view-winds" hidden aria-label="Rosa dei Venti"></section>
+
+  <section class="fish-wrap" id="view-fish" hidden aria-label="Specie e venti favorevoli"></section>
+
+  <section class="backup-bar" aria-label="Gestione dati e backup">
+    <div class="info" id="stats-info">Caricamento archivio...</div>
+    <div class="backup-actions">
+      <button type="button" class="btn ghost sm" id="btn-export-csv">Esporta CSV (Excel)</button>
+      <button type="button" class="btn ghost sm" id="btn-export">Esporta Backup</button>
+      <button type="button" class="btn ghost sm" id="btn-import">Importa Backup</button>
+    </div>
+  </section>
+  <footer style="text-align:center;color:var(--muted);font-size:12px;margin-top:2px">
+    Diario di Pesca · Versione <b>v20</b>
+  </footer>
+</div>
+
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Foto">
+  <img id="lb-img" alt="Foto della cattura">
+  <div class="row">
+    <button type="button" class="btn ghost" id="lb-close">Chiudi</button>
+    <button type="button" class="btn danger" id="lb-del">Elimina foto</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<input type="file" id="file" accept="image/*" multiple hidden>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* Coordinate confermate delle due zone */
+  var ZONES = {
+    corsini: { name: 'Porto Corsini',       lat: 44.488, lon: 12.285, mlat: 44.49, mlon: 12.40 },
+    pila:    { name: 'Pila (Porto Tolle)',  lat: 44.93,  lon: 12.46,  mlat: 44.90, mlon: 12.60 }
+  };
+
+  var LURES = [
+    'jerk', 'long jerk', 'minnow', 'wtd', 'needle', 'popper', 'jig', 'stickbait', 'gomma'
+  ];
+
+  var FISH_SPECIES = [
+    'pesce serra', 'alletterato', 'orata', 'lampuga', 'tonno rosso',
+    'sugarello', 'spigola', 'leccia amia', 'tombarello', 'corvina', 'ombrina'
+  ];
+
+  /* ---------- date ---------- */
+  var p2 = function (n) { return String(n).padStart(2, '0'); };
+  var key = function (y, m, d) { return y + '-' + p2(m) + '-' + p2(d); };
+  var toDate = function (s) { var a = s.split('-').map(Number); return new Date(a[0], a[1] - 1, a[2]); };
+  var fromDate = function (d) { return key(d.getFullYear(), d.getMonth() + 1, d.getDate()); };
+  var addDays = function (s, n) { var d = toDate(s); d.setDate(d.getDate() + n); return fromDate(d); };
+  var TODAY = fromDate(new Date());
+  var fmtMonth = new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric' });
+  var fmtLong = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  /* ---------- calcolo fase lunare astronomica ---------- */
+  function getMoonInfo(dateStr) {
+    var d = toDate(dateStr);
+    // Mezzogiorno UTC del giorno selezionato
+    var utcMs = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0);
+    var refNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0); // Luna nuova di riferimento (6 Gen 2000)
+    var synodicMonth = 29.53058867;
+    var days = (utcMs - refNewMoon) / 86400000;
+    var phase = ((days % synodicMonth) + synodicMonth) % synodicMonth;
+    var norm = phase / synodicMonth; // 0 = nuova, 0.5 = piena, 1 = nuova
+    var illum = Math.round((1 - Math.cos(2 * Math.PI * norm)) / 2 * 100);
+
+    var name = '';
+    if (norm < 0.033 || norm >= 0.967) name = 'Luna nuova';
+    else if (norm < 0.217) name = 'Luna crescente';
+    else if (norm < 0.283) name = 'Primo quarto';
+    else if (norm < 0.467) name = 'Gibbosa crescente';
+    else if (norm < 0.533) name = 'Luna piena';
+    else if (norm < 0.717) name = 'Gibbosa calante';
+    else if (norm < 0.783) name = 'Ultimo quarto';
+    else name = 'Luna calante';
+
+    return {
+      norm: norm,
+      illum: illum,
+      name: name,
+      ageDays: Math.round(phase),
+      svg: moonSvg(norm, 28),
+      miniSvg: moonSvg(norm, 13)
+    };
+  }
+
+  function moonSvg(norm, size) {
+    var r = 10, cx = 12, cy = 12;
+    var dark = '#162C33';
+    var lit = '#F4D06F';
+    var stroke = 'currentColor';
+    var inner = '';
+
+    if (norm < 0.033 || norm >= 0.967) {
+      inner = '<circle cx="12" cy="12" r="' + r + '" fill="' + dark + '" stroke="' + stroke + '" stroke-width="1.4"/>';
+    } else if (norm >= 0.467 && norm < 0.533) {
+      inner = '<circle cx="12" cy="12" r="' + r + '" fill="' + lit + '" stroke="' + stroke + '" stroke-width="1.4"/>';
+    } else {
+      var waxing = norm < 0.5;
+      var rx = Math.abs(Math.cos(2 * Math.PI * norm)) * r;
+      var sweepOuter = waxing ? 1 : 0;
+      var sweepInner;
+      if (waxing) {
+        sweepInner = norm < 0.25 ? 0 : 1;
+      } else {
+        sweepInner = norm < 0.75 ? 0 : 1;
+      }
+      var dPath = 'M ' + cx + ' ' + (cy - r) +
+                  ' A ' + r + ' ' + r + ' 0 0 ' + sweepOuter + ' ' + cx + ' ' + (cy + r) +
+                  ' A ' + rx.toFixed(2) + ' ' + r + ' 0 0 ' + sweepInner + ' ' + cx + ' ' + (cy - r) + ' Z';
+      inner = '<circle cx="12" cy="12" r="' + r + '" fill="' + dark + '" stroke="' + stroke + '" stroke-width="1.4"/>' +
+              '<path d="' + dPath + '" fill="' + lit + '"/>';
+    }
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" aria-hidden="true">' + inner + '</svg>';
+  }
+
+  /* ---------- calcolo alba e tramonto (NOAA solar algorithm, Europe/Rome) ---------- */
+  function getRomeOffsetHours(dateStr) {
+    var d = toDate(dateStr);
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Rome', timeZoneName: 'shortOffset' }).formatToParts(new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0)));
+      var tz = parts.find(function (p) { return p.type === 'timeZoneName'; });
+      if (tz && tz.value) {
+        var m = tz.value.match(/GMT([+-]\d+)/);
+        if (m) return Number(m[1]);
+      }
+    } catch (e) {}
+    var y = d.getFullYear();
+    var marLast = new Date(Date.UTC(y, 2, 31));
+    var dstStart = new Date(Date.UTC(y, 2, 31 - marLast.getUTCDay(), 1, 0, 0));
+    var octLast = new Date(Date.UTC(y, 9, 31));
+    var dstEnd = new Date(Date.UTC(y, 9, 31 - octLast.getUTCDay(), 1, 0, 0));
+    var noon = new Date(Date.UTC(y, d.getMonth(), d.getDate(), 12, 0, 0));
+    return (noon >= dstStart && noon < dstEnd) ? 2 : 1;
+  }
+
+  function calcSunTimes(dateStr, lat, lon) {
+    var d = toDate(dateStr);
+    var rad = Math.PI / 180;
+    var deg = 180 / Math.PI;
+    var jd = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0) / 86400000 + 2440587.5;
+    var n = jd - 2451545.0;
+    var L = (280.460 + 0.9856474 * n) % 360;
+    if (L < 0) L += 360;
+    var g = ((357.528 + 0.9856003 * n) % 360) * rad;
+    var lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * rad;
+    var eps = (23.439 - 0.0000004 * n) * rad;
+    var decl = Math.asin(Math.sin(eps) * Math.sin(lam));
+
+    var L0 = (280.46646 + 0.98564736 * n) % 360;
+    if (L0 < 0) L0 += 360;
+    var y = Math.tan(eps / 2);
+    y = y * y;
+    var e = 0.016708634;
+    var eqTime = 4 * deg * (y * Math.sin(2 * L0 * rad) - 2 * e * Math.sin(g) + 4 * e * y * Math.sin(g) * Math.cos(2 * L0 * rad) - 0.5 * y * y * Math.sin(4 * L0 * rad) - 1.25 * e * e * Math.sin(2 * g));
+
+    var cosH = (Math.cos(90.833 * rad) / (Math.cos(lat * rad) * Math.cos(decl))) - Math.tan(lat * rad) * Math.tan(decl);
+    if (cosH > 1 || cosH < -1) return { sunrise: '—', sunset: '—', daylight: '—' };
+    var ha = Math.acos(cosH) * deg;
+    var tzOffset = getRomeOffsetHours(dateStr);
+
+    var sunriseMin = Math.round(720 - 4 * (lon + ha) - eqTime + tzOffset * 60);
+    var sunsetMin = Math.round(720 - 4 * (lon - ha) - eqTime + tzOffset * 60);
+    var durMin = sunsetMin - sunriseMin;
+
+    var fmtM = function (m) {
+      var mm = ((m % 1440) + 1440) % 1440;
+      return p2(Math.floor(mm / 60)) + ':' + p2(mm % 60);
+    };
+    return {
+      sunrise: fmtM(sunriseMin),
+      sunset: fmtM(sunsetMin),
+      daylight: Math.floor(durMin / 60) + 'h ' + p2(durMin % 60) + 'm'
+    };
+  }
+
+  /* ---------- meteo e maree reali da Open-Meteo ---------- */
+  async function fetchJSON(url) {
+    var c = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var t = c ? setTimeout(function () { c.abort(); }, 15000) : null;
+    try {
+      var opts = c ? { signal: c.signal } : {};
+      var r = await fetch(url, opts);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return await r.json();
+    } finally {
+      if (t) clearTimeout(t);
+    }
+  }
+
+  function parseForecastPayload(j, out) {
+    var d = j && j.daily, sum = {}, cnt = {}, windSlots = {};
+    var targetHours = { '06': true, '10': true, '14': true, '17': true, '20': true, '23': true };
+    if (j && j.hourly && j.hourly.time) {
+      j.hourly.time.forEach(function (t, k) {
+        var day = t.slice(0, 10);
+        var hr = t.slice(11, 13);
+        if (j.hourly.pressure_msl) {
+          var v = j.hourly.pressure_msl[k];
+          if (v != null) { sum[day] = (sum[day] || 0) + v; cnt[day] = (cnt[day] || 0) + 1; }
+        }
+        if (targetHours[hr] && j.hourly.wind_speed_10m && j.hourly.wind_direction_10m) {
+          var ws = j.hourly.wind_speed_10m[k];
+          var wd = j.hourly.wind_direction_10m[k];
+          if (ws != null || wd != null) {
+            if (!windSlots[day]) windSlots[day] = {};
+            windSlots[day][hr] = { speed: ws, dir: wd };
+          }
+        }
+      });
+    }
+    if (d && d.time) {
+      d.time.forEach(function (t, k) {
+        if ((!d.temperature_2m_max || d.temperature_2m_max[k] == null) && (!d.weather_code || d.weather_code[k] == null)) return;
+        var prev = out[t] || {};
+        out[t] = {
+          tmax: d.temperature_2m_max ? d.temperature_2m_max[k] : null,
+          tmin: d.temperature_2m_min ? d.temperature_2m_min[k] : null,
+          wind: d.wind_speed_10m_max ? d.wind_speed_10m_max[k] : null,
+          dir: d.wind_direction_10m_dominant ? d.wind_direction_10m_dominant[k] : null,
+          pres: cnt[t] ? sum[t] / cnt[t] : null,
+          code: d.weather_code ? d.weather_code[k] : null,
+          sunrise: (d.sunrise && d.sunrise[k]) ? d.sunrise[k].slice(11, 16) : (prev.sunrise || null),
+          sunset: (d.sunset && d.sunset[k]) ? d.sunset[k].slice(11, 16) : (prev.sunset || null),
+          windSlots: windSlots[t] || prev.windSlots || null,
+          wave: prev.wave != null ? prev.wave : null,
+          sea: prev.sea != null ? prev.sea : null,
+          tides: prev.tides || null,
+          src: 'live'
+        };
+      });
+    }
+  }
+
+  function parseMarinePayload(mj, out) {
+    var ss = {}, sc = {}, tideByDay = {};
+    if (mj && mj.daily && mj.daily.time) {
+      mj.daily.time.forEach(function (t, k) {
+        if (!out[t]) out[t] = { tmax: null, tmin: null, wind: null, dir: null, pres: null, code: null, wave: null, sea: null, tides: null, src: 'marine' };
+        if (mj.daily.wave_height_max && mj.daily.wave_height_max[k] != null) {
+          out[t].wave = mj.daily.wave_height_max[k];
+        }
+      });
+    }
+    if (mj && mj.hourly && mj.hourly.time) {
+      mj.hourly.time.forEach(function (t, k) {
+        var dd = t.slice(0, 10);
+        if (!out[dd]) out[dd] = { tmax: null, tmin: null, wind: null, dir: null, pres: null, code: null, wave: null, sea: null, tides: null, src: 'marine' };
+        if (mj.hourly.sea_surface_temperature) {
+          var v = mj.hourly.sea_surface_temperature[k];
+          if (v != null) { ss[dd] = (ss[dd] || 0) + v; sc[dd] = (sc[dd] || 0) + 1; }
+        }
+        if (mj.hourly.sea_level_height_msl) {
+          var sl = mj.hourly.sea_level_height_msl[k];
+          if (sl != null) {
+            if (!tideByDay[dd]) tideByDay[dd] = [];
+            tideByDay[dd].push({ h: Number(t.slice(11, 13)), v: Number(sl) });
+          }
+        }
+      });
+    }
+    Object.keys(ss).forEach(function (dd) { if (out[dd]) out[dd].sea = ss[dd] / sc[dd]; });
+    Object.keys(tideByDay).forEach(function (dd) {
+      if (out[dd] && tideByDay[dd].length >= 6) {
+        out[dd].tides = tideByDay[dd];
+      }
+    });
+  }
+
+  async function liveRange(zone, a, b) {
+    var Z = ZONES[zone], out = {};
+    var dailyParams = '&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,wind_direction_10m_dominant,sunrise,sunset' +
+      '&hourly=pressure_msl,wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=Europe%2FRome';
+    var cut = addDays(TODAY, -5);
+
+    // 1) Archivio storico (solo fino a 5 giorni fa, per non far fallire richieste su giorni futuri)
+    if (a <= cut) {
+      var archEnd = b < cut ? b : cut;
+      try {
+        var ua = 'https://archive-api.open-meteo.com/v1/archive?latitude=' + Z.lat + '&longitude=' + Z.lon +
+          '&start_date=' + a + '&end_date=' + archEnd + dailyParams;
+        parseForecastPayload(await fetchJSON(ua), out);
+      } catch (e) {}
+    }
+
+    // 2) Previsioni + ultimi giorni (past_days=31, fallback past_days=14, fallback forecast base senza past_days)
+    var forecastUrls = [
+      'https://api.open-meteo.com/v1/forecast?latitude=' + Z.lat + '&longitude=' + Z.lon + '&past_days=31&forecast_days=16' + dailyParams,
+      'https://api.open-meteo.com/v1/forecast?latitude=' + Z.lat + '&longitude=' + Z.lon + '&past_days=14&forecast_days=16' + dailyParams,
+      'https://api.open-meteo.com/v1/forecast?latitude=' + Z.lat + '&longitude=' + Z.lon + '&forecast_days=16' + dailyParams
+    ];
+    for (var fIdx = 0; fIdx < forecastUrls.length; fIdx++) {
+      try {
+        parseForecastPayload(await fetchJSON(forecastUrls[fIdx]), out);
+        break;
+      } catch (e) {}
+    }
+
+    // 3) Dati marini (onde, temperatura acqua, maree) con fallback graduale
+    var marineUrls = [
+      'https://marine-api.open-meteo.com/v1/marine?latitude=' + Z.mlat + '&longitude=' + Z.mlon +
+        '&past_days=31&forecast_days=16' +
+        '&daily=wave_height_max&hourly=sea_surface_temperature,sea_level_height_msl&timezone=Europe%2FRome',
+      'https://marine-api.open-meteo.com/v1/marine?latitude=' + Z.mlat + '&longitude=' + Z.mlon +
+        '&forecast_days=16' +
+        '&daily=wave_height_max&hourly=sea_surface_temperature,sea_level_height_msl&timezone=Europe%2FRome',
+      'https://marine-api.open-meteo.com/v1/marine?latitude=' + Z.mlat + '&longitude=' + Z.mlon +
+        '&start_date=' + a + '&end_date=' + b +
+        '&daily=wave_height_max&hourly=sea_surface_temperature,sea_level_height_msl&timezone=Europe%2FRome'
+    ];
+    for (var mIdx = 0; mIdx < marineUrls.length; mIdx++) {
+      try {
+        parseMarinePayload(await fetchJSON(marineUrls[mIdx]), out);
+        break;
+      } catch (e) {}
+    }
+    return out;
+  }
+
+  /* ---------- grafico e picchi di marea ---------- */
+  function analyzeTides(tides) {
+    if (!Array.isArray(tides) || tides.length < 6) return null;
+    var vals = tides.map(function (p) { return p.v; });
+    var minV = Math.min.apply(null, vals);
+    var maxV = Math.max.apply(null, vals);
+    var span = maxV - minV;
+    if (span < 0.03) return { events: [], minV: minV, maxV: maxV };
+
+    var events = [];
+    for (var i = 1; i < tides.length - 1; i++) {
+      var prev = tides[i - 1].v, curr = tides[i].v, next = tides[i + 1].v;
+      if (curr >= prev && curr > next && (curr - minV) > span * 0.25) {
+        events.push({ type: 'alta', h: tides[i].h, v: curr });
+      } else if (curr <= prev && curr < next && (maxV - curr) > span * 0.25) {
+        events.push({ type: 'bassa', h: tides[i].h, v: curr });
+      }
+    }
+    return { events: events, minV: minV, maxV: maxV };
+  }
+
+  function renderWindSlotsWidget(w) {
+    var slots = w && w.windSlots;
+    var periods = [
+      { title: 'Mattina', hours: ['06', '10'] },
+      { title: 'Pomeriggio', hours: ['14', '17'] },
+      { title: 'Sera', hours: ['20', '23'] }
+    ];
+    var hasAny = false;
+    if (slots) {
+      Object.keys(slots).forEach(function (k) { if (slots[k]) hasAny = true; });
+    }
+    if (!hasAny) {
+      return '<div class="wind-slots-box"><div class="tide-head"><h3>Dettaglio Vento (Mattina · Pomeriggio · Sera)</h3></div>' +
+             '<p class="sub" style="margin:0">Dettaglio orario del vento non disponibile per questa data.</p></div>';
+    }
+    var colsHtml = periods.map(function (per) {
+      var rowsHtml = per.hours.map(function (hr) {
+        var item = slots[hr];
+        if (!item || (item.speed == null && item.dir == null)) {
+          return '<div class="wslot-row"><span class="wslot-hr">' + hr + ':00</span><span class="sub" style="margin:0">—</span></div>';
+        }
+        var cCode = item.dir != null ? card(item.dir) : '';
+        var wLabel = item.dir != null ? (cCode + ' · ' + windName(item.dir).split(' ')[0]) : '—';
+        return '<div class="wslot-row">' +
+          '<span class="wslot-hr">' + hr + ':00</span>' +
+          '<span class="wslot-dir">' + arrow(item.dir) + escHtml(wLabel) + '</span>' +
+          '<span class="wslot-spd">' + (item.speed != null ? num(item.speed) : '—') + ' <small>km/h</small></span>' +
+        '</div>';
+      }).join('');
+      return '<div class="wperiod"><span class="wperiod-title">' + per.title + '</span>' + rowsHtml + '</div>';
+    }).join('');
+
+    return '<div class="wind-slots-box">' +
+      '<div class="tide-head"><h3>Dettaglio Vento (Mattina · Pomeriggio · Sera)</h3></div>' +
+      '<div class="wind-periods">' + colsHtml + '</div>' +
+    '</div>';
+  }
+
+  function renderTideWidget(tides) {
+    var info = analyzeTides(tides);
+    if (!info) {
+      return '<div class="tide-box"><div class="tide-head"><h3>Andamento Maree</h3></div>' +
+             '<p class="sub" style="margin:0">Dati di marea non disponibili per questa data.</p></div>';
+    }
+    var W = 600, H = 82, padL = 8, padR = 8, padT = 14, padB = 20;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var minV = info.minV, maxV = info.maxV;
+    var range = (maxV - minV) || 0.1;
+
+    var pts = tides.map(function (p) {
+      var x = padL + (p.h / 23) * plotW;
+      var y = padT + plotH - ((p.v - minV) / range) * plotH;
+      return { x: x, y: y, h: p.h, v: p.v };
+    });
+
+    var lineD = pts.map(function (pt, idx) {
+      return (idx === 0 ? 'M ' : 'L ') + pt.x.toFixed(1) + ' ' + pt.y.toFixed(1);
+    }).join(' ');
+    var areaD = lineD + ' L ' + pts[pts.length - 1].x.toFixed(1) + ' ' + (padT + plotH) +
+                ' L ' + pts[0].x.toFixed(1) + ' ' + (padT + plotH) + ' Z';
+
+    var hourTicks = [0, 6, 12, 18, 23].map(function (hr) {
+      var x = padL + (hr / 23) * plotW;
+      return '<line x1="' + x.toFixed(1) + '" y1="' + padT + '" x2="' + x.toFixed(1) + '" y2="' + (padT + plotH) + '" stroke="var(--line)" stroke-dasharray="3 3" stroke-width="1"/>' +
+             '<text x="' + x.toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle" fill="var(--muted)" font-size="10" font-family="var(--font-body)">' + p2(hr) + ':00</text>';
+    }).join('');
+
+    var markers = info.events.map(function (ev) {
+      var pt = pts.find(function (p) { return p.h === ev.h; });
+      if (!pt) return '';
+      var col = ev.type === 'alta' ? 'var(--accent)' : 'var(--catch)';
+      return '<circle cx="' + pt.x.toFixed(1) + '" cy="' + pt.y.toFixed(1) + '" r="4" fill="' + col + '" stroke="var(--surface)" stroke-width="1.5"/>';
+    }).join('');
+
+    var evBadges = info.events.length
+      ? info.events.map(function (ev) {
+          var label = ev.type === 'alta' ? 'Alta' : 'Bassa';
+          var sign = ev.v >= 0 ? '+' : '';
+          return '<span class="tide-ev ' + ev.type + '"><b>' + label + '</b> ' + p2(ev.h) + ':00 (' + sign + num(ev.v, 2) + ' m)</span>';
+        }).join('')
+      : '<span class="sub" style="margin:0">Escursione ridotta (' + num(maxV - minV, 2) + ' m)</span>';
+
+    return '<div class="tide-box">' +
+      '<div class="tide-head"><h3>Andamento Maree (24h)</h3><div class="tide-events">' + evBadges + '</div></div>' +
+      '<svg class="tide-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-label="Grafico andamento maree">' +
+        '<defs><linearGradient id="tideGrad" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="var(--accent)" stop-opacity="0.32"/>' +
+          '<stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>' +
+        '</linearGradient></defs>' +
+        hourTicks +
+        '<path d="' + areaD + '" fill="url(#tideGrad)"/>' +
+        '<path d="' + lineD + '" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+        markers +
+      '</svg>' +
+    '</div>';
+  }
+
+  var WX = { corsini: {}, pila: {} }, LOADED = {};
+  async function ensureWeather(zone, y, m) {
+    var k = zone + '|' + y + '-' + m;
+    if (LOADED[k]) return;
+    var last = new Date(y, m, 0).getDate();
+    var a = addDays(key(y, m, 1), -1), b = addDays(key(y, m, last), 1);
+    try {
+      var data = await liveRange(zone, a, b);
+      if (data && Object.keys(data).length > 0) {
+        Object.assign(WX[zone], data);
+        LOADED[k] = true;
+      }
+    } catch (e) {
+      toast('Meteo offline o non raggiungibile per questo mese');
+    }
+  }
+
+  /* ---------- archivio locale: IndexedDB con ripiego in memoria ---------- */
+  var store = (function () {
+    var mem = new Map(), memPrefs = new Map(), db = null;
+    function open() {
+      return new Promise(function (res) {
+        try {
+          var rq = indexedDB.open('diario-pesca', 2);
+          rq.onupgradeneeded = function () {
+            var d = rq.result;
+            if (!d.objectStoreNames.contains('entries')) d.createObjectStore('entries', { keyPath: 'date' });
+            if (!d.objectStoreNames.contains('fish_prefs')) d.createObjectStore('fish_prefs', { keyPath: 'fish' });
+          };
+          rq.onsuccess = function () { db = rq.result; res(); };
+          rq.onerror = function () { res(); };
+        } catch (e) { res(); }
+      });
+    }
+    function txStore(stName, mode, fn) {
+      return new Promise(function (res, rej) {
+        try {
+          var t = db.transaction(stName, mode), r = fn(t.objectStore(stName));
+          t.oncomplete = function () { res(r && r.result); };
+          t.onerror = function () { rej(t.error); };
+        } catch (e) { rej(e); }
+      });
+    }
+    return {
+      open: open,
+      all: async function () { if (!db) return Array.from(mem.values()); return await txStore('entries', 'readonly', function (s) { return s.getAll(); }) || []; },
+      put: async function (e) { if (!db) { mem.set(e.date, e); return; } await txStore('entries', 'readwrite', function (s) { return s.put(e); }); },
+      del: async function (d) { if (!db) { mem.delete(d); return; } await txStore('entries', 'readwrite', function (s) { return s.delete(d); }); },
+      allPrefs: async function () { if (!db) return Array.from(memPrefs.values()); return await txStore('fish_prefs', 'readonly', function (s) { return s.getAll(); }) || []; },
+      putPref: async function (p) { if (!db) { memPrefs.set(p.fish, p); return; } await txStore('fish_prefs', 'readwrite', function (s) { return s.put(p); }); }
+    };
+  })();
+
+  /* ---------- stato ---------- */
+  var now = new Date();
+  var S = { zone: 'corsini', y: now.getFullYear(), m: now.getMonth() + 1, sel: TODAY, entries: new Map(), fishPrefs: new Map() };
+  var urls = new Map();
+  function urlFor(ph) {
+    if (!urls.has(ph.id)) urls.set(ph.id, URL.createObjectURL(ph.blob));
+    return urls.get(ph.id);
+  }
+  var uid = function () { return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random(); };
+
+  /* ---------- formattazione ---------- */
+  var CARD = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+  var card = function (d) { return CARD[Math.round(d / 45) % 8]; };
+  var WNAME = ['Tramontana', 'Grecale (bora)', 'Levante', 'Scirocco', 'Ostro', 'Libeccio', 'Ponente', 'Maestrale'];
+  var windName = function (d) { return WNAME[Math.round(d / 45) % 8]; };
+
+  var WINDS_INFO = [
+    { code: 'N',  deg: 0,   name: 'Tramontana',      origin: 'Tira da Nord (0°)',          sea: 'Vento freddo e secco da terra/nord; mare increspato sottocosta, scaduta pulita.' },
+    { code: 'NE', deg: 45,  name: 'Grecale (Bora)',  origin: 'Tira da Nord-Est (45°)',     sea: 'Vento teso e freddo da mare aperto in Adriatico; alza mare formato e onda corta.' },
+    { code: 'E',  deg: 90,  name: 'Levante',         origin: 'Tira da Est (90°)',          sea: 'Vento frontale dal largo verso la costa; spinge acqua e foraggio verso riva.' },
+    { code: 'SE', deg: 135, name: 'Scirocco',        origin: 'Tira da Sud-Est (135°)',     sea: 'Vento umido e mite; genera onda lunga e corrente costiera da sud verso nord.' },
+    { code: 'S',  deg: 180, name: 'Ostro (Mezzogiorno)', origin: 'Tira da Sud (180°)',     sea: 'Vento caldo meridionale; mare mosso lungo costa e acqua spesso velata.' },
+    { code: 'SO', deg: 225, name: 'Libeccio',        origin: 'Tira da Sud-Ovest (225°)',   sea: 'Vento rafficato da terra/sud-ovest; spiana l\'onda sottocosta ma crea forte corrente.' },
+    { code: 'O',  deg: 270, name: 'Ponente',         origin: 'Tira da Ovest (270°)',       sea: 'Vento da terra (occidentale); calma il moto ondoso vicino a riva e schiarisce l\'acqua.' },
+    { code: 'NO', deg: 315, name: 'Maestrale',       origin: 'Tira da Nord-Ovest (315°)',  sea: 'Vento fresco e regolare; favorisce condizioni limpide e buone scadute.' }
+  ];
+
+  function renderWinds() {
+    var el = $('#view-winds');
+    if (!el) return;
+    var e = S.entries.get(S.sel);
+    var w = (e && e.wx) || WX[S.zone][S.sel];
+    var activeIdx = (w && w.dir != null && !isNaN(w.dir)) ? (Math.round(w.dir / 45) % 8) : -1;
+    var activeWind = activeIdx >= 0 ? WINDS_INFO[activeIdx] : null;
+
+    var statusLine = activeWind
+      ? 'Vento del <b>' + fmtLong.format(toDate(S.sel)) + '</b> (' + ZONES[S.zone].name + '): <b>' + activeWind.name + '</b> · da ' + activeWind.code + ' (' + num(w.wind) + ' km/h)'
+      : 'Seleziona un giorno con dati meteo per evidenziare il vento dominante.';
+
+    var spokes = WINDS_INFO.map(function (item, idx) {
+      var rad = (item.deg - 90) * Math.PI / 180;
+      var x1 = 110 + Math.cos(rad) * 32;
+      var y1 = 110 + Math.sin(rad) * 32;
+      var x2 = 110 + Math.cos(rad) * 74;
+      var y2 = 110 + Math.sin(rad) * 74;
+      var tx = 110 + Math.cos(rad) * 93;
+      var ty = 110 + Math.sin(rad) * 93;
+      var isAct = idx === activeIdx;
+      var col = isAct ? 'var(--catch)' : (idx % 2 === 0 ? 'var(--accent)' : 'var(--muted)');
+      var sw = isAct ? '3' : (idx % 2 === 0 ? '2' : '1.2');
+      return '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="' + col + '" stroke-width="' + sw + '" stroke-linecap="round"/>' +
+             '<text x="' + tx.toFixed(1) + '" y="' + (ty + 4).toFixed(1) + '" text-anchor="middle" fill="' + (isAct ? 'var(--catch)' : 'var(--ink)') + '" font-size="' + (idx % 2 === 0 ? '13' : '11') + '" font-weight="' + (isAct || idx % 2 === 0 ? '700' : '500') + '" font-family="var(--font-display)">' + item.code + '</text>';
+    }).join('');
+
+    var activeArrow = activeWind
+      ? '<g transform="rotate(' + ((activeWind.deg + 180) % 360) + ' 110 110)">' +
+          '<path d="M110 42 L117 64 L110 59 L103 64 Z" fill="var(--catch)"/>' +
+        '</g>'
+      : '';
+
+    var cardsHtml = WINDS_INFO.map(function (item, idx) {
+      var isAct = idx === activeIdx;
+      var rot = (item.deg + 180) % 360;
+      return '<div class="wind-card' + (isAct ? ' is-active' : '') + '">' +
+        '<div class="wind-badge">' +
+          '<svg viewBox="0 0 10 10" style="transform:rotate(' + rot + 'deg)" aria-hidden="true"><path d="M5 0 L9.2 9.6 L5 7.4 L.8 9.6Z"/></svg>' +
+          '<b>' + item.code + '</b>' +
+        '</div>' +
+        '<div class="wind-info">' +
+          '<div class="wind-title">' + escHtml(item.name) + (isAct ? '<span class="wind-tag">Vento del giorno</span>' : '') + '</div>' +
+          '<div class="wind-dir">' + escHtml(item.origin) + '</div>' +
+          '<div class="wind-desc">' + escHtml(item.sea) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    el.innerHTML =
+      '<div class="compass-card">' +
+        '<h2 style="margin:0;font:600 24px/1 var(--font-display)">Rosa dei Venti</h2>' +
+        '<p class="sub" style="margin:0">' + statusLine + '</p>' +
+        '<svg class="compass-svg" viewBox="0 0 220 220" aria-label="Rosa dei venti">' +
+          '<circle cx="110" cy="110" r="76" fill="none" stroke="var(--line)" stroke-width="1.5"/>' +
+          '<circle cx="110" cy="110" r="32" fill="none" stroke="var(--line)" stroke-dasharray="3 3" stroke-width="1"/>' +
+          spokes +
+          activeArrow +
+          '<circle cx="110" cy="110" r="5" fill="var(--accent)"/>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="winds-grid">' + cardsHtml + '</div>';
+  }
+
+  function getFishPref(fish) {
+    var p = S.fishPrefs.get(fish);
+    if (!p) {
+      p = { fish: fish, fav: [], unfav: [] };
+      S.fishPrefs.set(fish, p);
+    }
+    return {
+      fish: fish,
+      fav: Array.isArray(p.fav) ? p.fav : [],
+      unfav: Array.isArray(p.unfav) ? p.unfav : []
+    };
+  }
+
+  function windLabelByCode(code) {
+    var w = WINDS_INFO.find(function (item) { return item.code === code; });
+    return w ? (w.name + ' (' + w.code + ')') : code;
+  }
+
+  function renderFishWinds() {
+    var el = $('#view-fish');
+    if (!el) return;
+    var e = S.entries.get(S.sel);
+    var w = (e && e.wx) || WX[S.zone][S.sel];
+    var activeCode = (w && w.dir != null && !isNaN(w.dir)) ? card(w.dir) : '';
+    var activeWindObj = activeCode ? WINDS_INFO.find(function (item) { return item.code === activeCode; }) : null;
+
+    var headerBanner = '<div class="fish-banner">' +
+      '<h2 style="margin:0;font:600 24px/1 var(--font-display)">Specie e Venti Favorevoli / Sfavorevoli</h2>' +
+      '<p class="sub" style="margin:0">' +
+        (activeWindObj
+          ? 'Vento del <b>' + fmtLong.format(toDate(S.sel)) + '</b> (' + ZONES[S.zone].name + '): <b>' + activeWindObj.name + ' (' + activeWindObj.code + ')</b> · ' + num(w.wind) + ' km/h'
+          : 'Imposta per ogni specie quali venti sono favorevoli e quali no.') +
+      '</p>' +
+    '</div>';
+
+    var listHtml = FISH_SPECIES.map(function (fish) {
+      var pref = getFishPref(fish);
+      var isFavToday = activeCode && pref.fav.indexOf(activeCode) !== -1;
+      var isUnfavToday = activeCode && pref.unfav.indexOf(activeCode) !== -1;
+      var cardCls = 'fish-card' + (isFavToday ? ' is-fav-today' : (isUnfavToday ? ' is-unfav-today' : ''));
+      var statusBadge = isFavToday
+        ? '<span class="fish-status fav">Vento favorevole oggi</span>'
+        : (isUnfavToday ? '<span class="fish-status unfav">Vento sfavorevole oggi</span>' : '');
+
+      var favChips = pref.fav.length
+        ? pref.fav.map(function (code) {
+            return '<span class="wchip fav">' + escHtml(windLabelByCode(code)) +
+              '<button type="button" class="fw-rem" data-fish="' + escHtml(fish) + '" data-kind="fav" data-code="' + escHtml(code) + '" aria-label="Rimuovi vento">×</button></span>';
+          }).join('')
+        : '<span class="sub" style="margin:0;font-size:12.5px">Nessun vento aggiunto</span>';
+
+      var unfavChips = pref.unfav.length
+        ? pref.unfav.map(function (code) {
+            return '<span class="wchip unfav">' + escHtml(windLabelByCode(code)) +
+              '<button type="button" class="fw-rem" data-fish="' + escHtml(fish) + '" data-kind="unfav" data-code="' + escHtml(code) + '" aria-label="Rimuovi vento">×</button></span>';
+          }).join('')
+        : '<span class="sub" style="margin:0;font-size:12.5px">Nessun vento aggiunto</span>';
+
+      var favOpts = '<option value="">+ Aggiungi vento...</option>' + WINDS_INFO.filter(function (wi) {
+        return pref.fav.indexOf(wi.code) === -1;
+      }).map(function (wi) {
+        return '<option value="' + wi.code + '">' + escHtml(wi.name) + ' (' + wi.code + ')</option>';
+      }).join('');
+
+      var unfavOpts = '<option value="">+ Aggiungi vento...</option>' + WINDS_INFO.filter(function (wi) {
+        return pref.unfav.indexOf(wi.code) === -1;
+      }).map(function (wi) {
+        return '<option value="' + wi.code + '">' + escHtml(wi.name) + ' (' + wi.code + ')</option>';
+      }).join('');
+
+      return '<div class="' + cardCls + '">' +
+        '<div class="fish-head"><span class="fish-name">' + escHtml(capFirst(fish)) + '</span>' + statusBadge + '</div>' +
+        '<div class="fish-cols">' +
+          '<div class="wind-group">' +
+            '<span class="wind-group-lbl fav">Venti favorevoli (SI)</span>' +
+            '<div class="wind-chips">' + favChips + '</div>' +
+            '<div class="wadd-row">' +
+              '<select class="fw-sel" data-fish="' + escHtml(fish) + '" data-kind="fav" aria-label="Scegli vento favorevole per ' + escHtml(fish) + '">' + favOpts + '</select>' +
+              '<button type="button" class="btn sm fw-add" data-fish="' + escHtml(fish) + '" data-kind="fav">Aggiungi</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="wind-group">' +
+            '<span class="wind-group-lbl unfav">Venti sfavorevoli (NO)</span>' +
+            '<div class="wind-chips">' + unfavChips + '</div>' +
+            '<div class="wadd-row">' +
+              '<select class="fw-sel" data-fish="' + escHtml(fish) + '" data-kind="unfav" aria-label="Scegli vento sfavorevole per ' + escHtml(fish) + '">' + unfavOpts + '</select>' +
+              '<button type="button" class="btn ghost sm fw-add" data-fish="' + escHtml(fish) + '" data-kind="unfav">Aggiungi</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    el.innerHTML = headerBanner + listHtml;
+  }
+
+  async function addFishWind(fish, kind, code) {
+    if (!code) return;
+    var pref = getFishPref(fish);
+    var other = kind === 'fav' ? 'unfav' : 'fav';
+    if (pref[kind].indexOf(code) === -1) pref[kind].push(code);
+    pref[other] = pref[other].filter(function (c) { return c !== code; });
+    S.fishPrefs.set(fish, pref);
+    await store.putPref(pref);
+    renderFishWinds();
+  }
+
+  async function removeFishWind(fish, kind, code) {
+    var pref = getFishPref(fish);
+    pref[kind] = pref[kind].filter(function (c) { return c !== code; });
+    S.fishPrefs.set(fish, pref);
+    await store.putPref(pref);
+    renderFishWinds();
+  }
+
+  var coords = function (z) { return num(z.lat, 3) + '° N · ' + num(z.lon, 3) + '° E'; };
+  var num = function (v, dec) { return v == null || isNaN(v) ? '—' : Number(v).toFixed(dec || 0).replace('.', ','); };
+  var escHtml = function (str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  };
+  var capFirst = function (str) { return str ? str.charAt(0).toUpperCase() + str.slice(1) : ''; };
+  var arrow = function (dir) {
+    if (dir == null || isNaN(dir)) return '';
+    return '<svg class="arr" viewBox="0 0 10 10" style="transform:rotate(' + ((dir + 180) % 360) + 'deg)" aria-hidden="true"><path d="M5 0 L9.2 9.6 L5 7.4 L.8 9.6Z"/></svg>';
+  };
+  var ICON = {
+    sun: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+    part: '<circle cx="8.5" cy="8.5" r="3"/><path d="M8.5 2v1.5M2 8.5h1.5M3.9 3.9l1 1M13.1 3.9l-1 1"/><path d="M8 19h9.5a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.5 1.2A3 3 0 0 0 8 19z"/>',
+    cloud: '<path d="M7 18h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.3 1.6A3.3 3.3 0 0 0 7 18z"/>',
+    rain: '<path d="M7 14h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.3 1.6A3.3 3.3 0 0 0 7 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/>',
+    storm: '<path d="M7 13h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.3 1.6A3.3 3.3 0 0 0 7 13z"/><path d="M12.5 13l-2.5 4h3l-2 4"/>',
+    snow: '<path d="M7 14h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.3 1.6A3.3 3.3 0 0 0 7 14z"/><path d="M8 18h.01M12 20h.01M16 18h.01"/>'
+  };
+  function sky(c) {
+    var k, l;
+    if (c === 0) { k = 'sun'; l = 'Sereno'; }
+    else if (c === 1) { k = 'sun'; l = 'Poco nuvoloso'; }
+    else if (c === 2) { k = 'part'; l = 'Parz. nuvoloso'; }
+    else if (c === 3) { k = 'cloud'; l = 'Coperto'; }
+    else if (c === 45 || c === 48) { k = 'cloud'; l = 'Nebbia'; }
+    else if (c >= 51 && c <= 57) { k = 'rain'; l = 'Pioggerella'; }
+    else if (c >= 61 && c <= 67) { k = 'rain'; l = 'Pioggia'; }
+    else if ((c >= 71 && c <= 77) || c === 85 || c === 86) { k = 'snow'; l = 'Neve'; }
+    else if (c >= 80 && c <= 82) { k = 'rain'; l = 'Rovesci'; }
+    else if (c >= 95) { k = 'storm'; l = 'Temporale'; }
+    else { k = 'cloud'; l = '—'; }
+    return { l: l, svg: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[k] + '</svg>' };
+  }
+
+  function toast(msg) {
+    var t = $('#toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(function () { t.hidden = true; }, 3500);
+  }
+
+  function updateStats() {
+    var totalDays = S.entries.size;
+    var totalPhotos = 0;
+    S.entries.forEach(function (e) { totalPhotos += (e.photos ? e.photos.length : 0); });
+    $('#stats-info').innerHTML = 'Archivio locale: <b>' + totalDays + (totalDays === 1 ? ' uscita</b>' : ' uscite</b>') +
+      ' · <b>' + totalPhotos + ' foto</b>';
+  }
+
+  /* ---------- calendario ---------- */
+  function renderCal() {
+    $('#month').textContent = fmtMonth.format(new Date(S.y, S.m - 1, 1));
+    var grid = $('#grid'); grid.textContent = '';
+    var first = (new Date(S.y, S.m - 1, 1).getDay() + 6) % 7, last = new Date(S.y, S.m, 0).getDate();
+    for (var i = 0; i < first; i++) { var pad = document.createElement('span'); pad.className = 'pad'; grid.appendChild(pad); }
+    for (var d = 1; d <= last; d++) {
+      var s = key(S.y, S.m, d), e = S.entries.get(s);
+      var w = (e && e.wx) || WX[S.zone][s];
+      var moon = getMoonInfo(s);
+      var b = document.createElement('button');
+      b.type = 'button'; b.dataset.date = s;
+      b.className = 'day' + (s === TODAY ? ' is-today' : '') + (s > TODAY ? ' future' : '');
+      b.setAttribute('aria-pressed', s === S.sel ? 'true' : 'false');
+      var cover = e && e.photos && e.photos.length ? e.photos[0] : null;
+      if (cover) { b.classList.add('has-photo'); b.style.backgroundImage = 'url("' + urlFor(cover) + '")'; }
+      var badgeText = '';
+      if (e) {
+        var cList = getEntryCatches(e);
+        var totFish = cList.reduce(function (acc, c) { return acc + (c.qty || 1); }, 0);
+        if (e.photos && e.photos.length) badgeText = '×' + e.photos.length;
+        else if (cList.length === 1) badgeText = capFirst(cList[0].fish) + (cList[0].qty > 1 ? ' ×' + cList[0].qty : '');
+        else if (cList.length > 1) badgeText = cList.length + ' sp. (' + totFish + ')';
+        else badgeText = 'Uscita';
+      }
+      var badge = e ? '<span class="badge">' + escHtml(badgeText) + '</span>' : '';
+      b.innerHTML = '<span class="top"><span class="dn">' + d + moon.miniSvg + '</span>' + badge + '</span>' +
+        '<span class="bot"><span class="w">' + (w && w.wind != null ? arrow(w.dir) + num(w.wind) : '') + '</span><span class="t">' + (w && w.tmax != null ? num(w.tmax) + '°' : '') + '</span></span>';
+      b.setAttribute('aria-label', fmtLong.format(toDate(s)) + ', ' + moon.name +
+        (w && w.tmax != null ? ', max ' + num(w.tmax) + ' gradi, vento ' + num(w.wind) + ' chilometri orari' : '') +
+        (e ? ', ' + (e.photos ? e.photos.length : 0) + ' foto' : ''));
+      grid.appendChild(b);
+    }
+    updateStats();
+  }
+
+  /* ---------- scheda del giorno ---------- */
+  function snapshotNow() { var w = WX[S.zone][S.sel]; return w ? JSON.parse(JSON.stringify(w)) : null; }
+  function renderDetail() {
+    var s = S.sel, e = S.entries.get(s);
+    var w = (e && e.wx) || WX[S.zone][s];
+    var liveW = WX[S.zone][s];
+    var tides = (w && w.tides) || (liveW && liveW.tides) || null;
+    var moon = getMoonInfo(s);
+    var sunCalc = calcSunTimes(s, ZONES[S.zone].lat, ZONES[S.zone].lon);
+    var sunriseStr = (w && w.sunrise) || (liveW && liveW.sunrise) || sunCalc.sunrise;
+    var sunsetStr = (w && w.sunset) || (liveW && liveW.sunset) || sunCalc.sunset;
+    var prev = WX[S.zone][addDays(s, -1)];
+    var kind = s > TODAY ? 'Previsione' : (e && e.wx ? 'Registrato quel giorno' : 'Meteo del giorno');
+    var trend = '—';
+    if (w && prev && w.pres != null && prev.pres != null) {
+      var df = w.pres - prev.pres;
+      trend = (df > 0.4 ? '↑ +' : df < -0.4 ? '↓ ' : '→ ') + num(df, 1) + ' hPa su ieri';
+      if (df >= -0.4 && df <= 0.4) trend = '→ stabile su ieri';
+    }
+    var sk = w ? sky(w.code) : { l: '—', svg: '' };
+
+    var catchRowsData = getEditableCatchesForRender(e);
+    var totalQty = catchRowsData.reduce(function (sum, item) { return item.fish ? sum + (item.qty || 1) : sum; }, 0);
+
+    var catchesHtml = catchRowsData.map(function (item, idx) {
+      var opts = '<option value="">— Seleziona specie —</option>' + FISH_SPECIES.map(function (f) {
+        return '<option value="' + escHtml(f) + '"' + (item.fish === f ? ' selected' : '') + '>' + escHtml(capFirst(f)) + '</option>';
+      }).join('');
+      var lOpts = '<option value="">— Seleziona esca —</option>' + LURES.map(function (l) {
+        return '<option value="' + escHtml(l) + '"' + (item.lure === l ? ' selected' : '') + '>' + escHtml(capFirst(l)) + '</option>';
+      }).join('');
+      var removeBtn = catchRowsData.length > 1
+        ? '<button type="button" class="btn ghost btn-icon-sq catch-rem" data-idx="' + idx + '" aria-label="Rimuovi cattura" title="Rimuovi cattura">×</button>'
+        : '';
+      var headerRow = (catchRowsData.length > 1)
+        ? '<div class="catch-card-head"><span class="catch-card-title">Cattura #' + (idx + 1) + '</span>' + removeBtn + '</div>'
+        : '';
+      var itemCoord = (item.customCoords || '').trim();
+      var itemMapLink = itemCoord
+        ? ' · <a href="https://www.google.com/maps?q=' + encodeURIComponent(itemCoord) + '" target="_blank" rel="noopener" style="color:var(--accent);text-transform:none;letter-spacing:0">Maps</a>'
+        : '';
+      return '<div class="catch-card" data-idx="' + idx + '">' +
+        headerRow +
+        '<div class="catch-row">' +
+          '<select class="catch-fish" data-idx="' + idx + '" aria-label="Specie pescata">' + opts + '</select>' +
+          '<div class="qty-box" role="group" aria-label="Quantità">' +
+            '<button type="button" class="qty-dec" data-idx="' + idx + '" aria-label="Diminuisci quantità">−</button>' +
+            '<span>' + (item.qty || 1) + '</span>' +
+            '<button type="button" class="qty-inc" data-idx="' + idx + '" aria-label="Aumenta quantità">+</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="catch-subgrid">' +
+          '<label class="f"><span class="field-lbl">Esca usata</span>' +
+            '<select class="catch-lure" data-idx="' + idx + '" aria-label="Esca usata">' + lOpts + '</select>' +
+          '</label>' +
+          '<label class="f"><span class="field-lbl">Coordinate spot' + itemMapLink + '</span>' +
+            '<div class="coord-row">' +
+              '<input type="text" class="catch-coords" data-idx="' + idx + '" value="' + escHtml(item.customCoords || '') + '" placeholder="Es. 44.930, 12.460">' +
+              '<button type="button" class="btn ghost sm catch-gps" data-idx="' + idx + '" title="Usa posizione GPS attuale">GPS</button>' +
+            '</div>' +
+          '</label>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    var firstCoord = (catchRowsData[0] && catchRowsData[0].customCoords) ? catchRowsData[0].customCoords.trim() : '';
+    var mapQuery = firstCoord ? encodeURIComponent(firstCoord) : (ZONES[S.zone].lat + ',' + ZONES[S.zone].lon);
+    var coordLabel = firstCoord ? escHtml(firstCoord) + ' (Spot personalizzato)' : coords(ZONES[S.zone]);
+    var curMode = (e && e.mode) || '';
+
+    var el = $('#detail');
+    el.innerHTML =
+      '<div><h2>' + fmtLong.format(toDate(s)) + '</h2><p class="sub">' + ZONES[S.zone].name + ' · ' + kind + '</p>' +
+      '<p class="sub">' + coordLabel + ' · <a id="maps-link" href="https://www.google.com/maps?q=' + mapQuery + '" target="_blank" rel="noopener" style="color:var(--accent)">Apri su Maps</a></p></div>' +
+      '<div class="wx">' +
+        '<div class="tile"><span class="k">Temperatura</span><span class="v">' + (w && w.tmax != null ? num(w.tmax) + '°' : '—') + '<small>min ' + (w && w.tmin != null ? num(w.tmin) + '°' : '—') + '</small></span><span class="s">massima del giorno</span></div>' +
+        '<div class="tile"><span class="k">Vento</span><span class="v">' + (w && w.wind != null ? arrow(w.dir) + num(w.wind) : '—') + '<small>km/h</small></span><span class="s">' + (w && w.dir != null ? windName(w.dir) + ' · da ' + card(w.dir) : 'dati non disp.') + '</span></div>' +
+        '<div class="tile"><span class="k">Pressione</span><span class="v">' + (w && w.pres != null ? num(w.pres) : '—') + '<small>hPa</small></span><span class="s">' + trend + '</span></div>' +
+        '<div class="tile"><span class="k">Cielo</span><span class="v">' + sk.svg + '</span><span class="s">' + sk.l + '</span></div>' +
+        '<div class="tile"><span class="k">Onde</span><span class="v">' + (w && w.wave != null ? num(w.wave, 1) : '—') + '<small>m max</small></span><span class="s">mare aperto</span></div>' +
+        '<div class="tile"><span class="k">Acqua</span><span class="v">' + (w && w.sea != null ? num(w.sea, 1) + '°' : '—') + '<small>mare</small></span><span class="s">temperatura superficie</span></div>' +
+        '<div class="tile"><span class="k">Luna</span><span class="v">' + moon.svg + '<small>' + moon.illum + '%</small></span><span class="s"><b>' + moon.name + '</b></span></div>' +
+        '<div class="tile"><span class="k">Alba · Tramonto</span><span class="v" style="font-size:23px;gap:5px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--catch)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M5.6 7.6l2.1 2.1M18.4 7.6l-2.1 2.1M3 17h18M7 17a5 5 0 0 1 10 0"/><path d="M5 21h14"/></svg>' + escHtml(sunriseStr) + ' <small>· ' + escHtml(sunsetStr) + '</small></span><span class="s">luce <b>' + escHtml(sunCalc.daylight) + '</b></span></div>' +
+      '</div>' +
+
+      renderWindSlotsWidget(w) +
+
+      renderTideWidget(tides) +
+
+      '<div><h3>Dettagli uscita</h3>' +
+        '<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">' +
+          '<span class="field-lbl">Modalità di pesca</span>' +
+          '<div class="mode-seg" role="group" aria-label="Modalità di pesca">' +
+            '<button type="button" id="mode-riva" aria-pressed="' + (curMode === 'riva' ? 'true' : 'false') + '">Da riva</button>' +
+            '<button type="button" id="mode-barca" aria-pressed="' + (curMode === 'barca' ? 'true' : 'false') + '">In barca</button>' +
+          '</div>' +
+        '</div>' +
+        '<div style="margin-top:12px">' +
+          '<div class="row">' +
+            '<span class="field-lbl">Specie, esca e spot' + (totalQty > 0 ? ' (Totale catture: ' + totalQty + ')' : '') + '</span>' +
+            '<button type="button" class="btn ghost sm" id="add-fish-row">+ Aggiungi specie</button>' +
+          '</div>' +
+          '<div class="catches-list" id="catches-list">' + catchesHtml + '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<div><h3>Ora della pescata</h3><div class="times">' +
+        '<label class="f"><span class="lbl">Dalle</span><input type="time" id="t-from"></label>' +
+        '<label class="f"><span class="lbl">Alle</span><input type="time" id="t-to"></label>' +
+        '<span class="dur" id="dur"></span></div></div>' +
+      '<div class="row"><h3>Catture</h3><button type="button" class="btn" id="add">Aggiungi foto</button></div>' +
+      '<div id="thumbs"></div>' +
+      '<label class="f"><span class="k" style="font:600 13px/1 var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Note (specie, peso, esca, orario)</span><textarea id="note" placeholder="Es. spigola 1,4 kg, americano, mattina presto con vento in calo"></textarea></label>' +
+      (e ? '<div class="row"><span class="sub" style="margin:0">Il meteo viene salvato con la giornata.</span><button type="button" class="btn ghost" id="delday">Elimina giornata</button></div>' : '');
+
+    var th = $('#thumbs');
+    if (e && e.photos && e.photos.length) {
+      th.className = 'thumbs';
+      e.photos.forEach(function (ph, i) {
+        var bt = document.createElement('button'); bt.type = 'button'; bt.setAttribute('aria-label', 'Apri foto ' + (i + 1));
+        var im = document.createElement('img'); im.alt = 'Cattura del ' + s; im.src = urlFor(ph); bt.appendChild(im);
+        bt.addEventListener('click', function () { openLb(ph.id); });
+        th.appendChild(bt);
+      });
+    } else {
+      th.innerHTML = '<p class="empty">Nessuna foto per questo giorno. Tocca «Aggiungi foto» per scattarne una o sceglierla dalla galleria.</p>';
+    }
+
+    $('#note').value = e ? (e.note || '') : '';
+    $('#t-from').value = (e && e.from) || '';
+    $('#t-to').value = (e && e.to) || '';
+    fmtDur();
+
+    $('#mode-riva').addEventListener('click', function () { toggleMode('riva'); });
+    $('#mode-barca').addEventListener('click', function () { toggleMode('barca'); });
+    $('#add-fish-row').addEventListener('click', addFishRow);
+    $('#catches-list').addEventListener('change', function (ev) {
+      var idx = Number(ev.target.dataset.idx);
+      if (ev.target.classList.contains('catch-fish')) {
+        updateCatchField(idx, 'fish', ev.target.value, true);
+      } else if (ev.target.classList.contains('catch-lure')) {
+        updateCatchField(idx, 'lure', ev.target.value, true);
+      }
+    });
+    $('#catches-list').addEventListener('input', function (ev) {
+      if (ev.target.classList.contains('catch-coords')) {
+        onCatchCoordsInput(Number(ev.target.dataset.idx), ev.target.value);
+      }
+    });
+    $('#catches-list').addEventListener('click', function (ev) {
+      var btn = ev.target.closest('button');
+      if (!btn) return;
+      var idx = Number(btn.dataset.idx);
+      if (btn.classList.contains('qty-inc')) changeFishQty(idx, 1);
+      else if (btn.classList.contains('qty-dec')) changeFishQty(idx, -1);
+      else if (btn.classList.contains('catch-rem')) removeFishRow(idx);
+      else if (btn.classList.contains('catch-gps')) fillCatchGPS(idx);
+    });
+    $('#t-from').addEventListener('change', onTime);
+    $('#t-to').addEventListener('change', onTime);
+    $('#add').addEventListener('click', function () { $('#file').click(); });
+    $('#note').addEventListener('input', onNote);
+
+    var dd = $('#delday');
+    if (dd) dd.addEventListener('click', function () {
+      if (dd.dataset.armed) { removeEntry(s); return; }
+      dd.dataset.armed = '1'; dd.textContent = 'Tocca ancora per confermare';
+      setTimeout(function () { if (dd.isConnected) { delete dd.dataset.armed; dd.textContent = 'Elimina giornata'; } }, 4000);
+    });
+  }
+
+  /* ---------- salvataggio ---------- */
+  function normalizeCatchItem(c, fallbackLure, fallbackCoords) {
+    return {
+      fish: (c && c.fish) || '',
+      qty: Math.max(1, Number(c && c.qty) || 1),
+      lure: (c && c.lure !== undefined) ? (c.lure || '') : (fallbackLure || ''),
+      customCoords: (c && c.customCoords !== undefined) ? (c.customCoords || '') : (fallbackCoords || '')
+    };
+  }
+
+  function getEntryCatches(e) {
+    if (!e) return [];
+    if (Array.isArray(e.catches) && e.catches.length) {
+      return e.catches.filter(function (c) {
+        return c && (c.fish || c.lure || (c.customCoords && c.customCoords.trim()));
+      }).map(function (c) {
+        return normalizeCatchItem(c, e.lure, e.customCoords);
+      });
+    }
+    if (e.fish || e.lure || (e.customCoords && e.customCoords.trim())) {
+      return [normalizeCatchItem({ fish: e.fish || '', qty: 1 }, e.lure, e.customCoords)];
+    }
+    return [];
+  }
+
+  function getEditableCatchesForRender(e) {
+    if (!e) return [{ fish: '', qty: 1, lure: '', customCoords: '' }];
+    if (Array.isArray(e.catches) && e.catches.length) {
+      return e.catches.map(function (c) {
+        return normalizeCatchItem(c, e.lure, e.customCoords);
+      });
+    }
+    if (e.fish || e.lure || (e.customCoords && e.customCoords.trim())) {
+      return [normalizeCatchItem({ fish: e.fish || '', qty: 1 }, e.lure, e.customCoords)];
+    }
+    return [{ fish: '', qty: 1, lure: '', customCoords: '' }];
+  }
+
+  function ensureEditableCatches(e) {
+    if (!Array.isArray(e.catches) || !e.catches.length) {
+      e.catches = getEditableCatchesForRender(e);
+    }
+    return e.catches;
+  }
+
+  function syncLegacyFields(e) {
+    var list = getEntryCatches(e);
+    var firstWithFish = list.find(function (c) { return c.fish; });
+    e.fish = firstWithFish ? firstWithFish.fish : '';
+    e.lure = list.length ? (list[0].lure || '') : '';
+    e.customCoords = list.length ? (list[0].customCoords || '') : '';
+  }
+
+  function ensureEntry() {
+    var e = S.entries.get(S.sel);
+    if (!e) {
+      e = { date: S.sel, zone: S.zone, mode: '', fish: '', catches: [], lure: '', customCoords: '', note: '', photos: [], wx: snapshotNow() };
+      S.entries.set(S.sel, e);
+    } else if (!e.wx) {
+      e.wx = snapshotNow();
+    }
+    e.zone = S.zone;
+    return e;
+  }
+
+  function isEntryEmpty(e) {
+    var hasCatches = getEntryCatches(e).length > 0;
+    return !(e.note && e.note.trim()) &&
+           !(e.photos && e.photos.length) &&
+           !e.from && !e.to &&
+           !e.mode && !hasCatches;
+  }
+
+  async function persist(e) {
+    try {
+      if (isEntryEmpty(e)) {
+        S.entries.delete(e.date); await store.del(e.date);
+      } else {
+        await store.put(e);
+      }
+    } catch (err) { toast('Errore di salvataggio sul dispositivo.'); }
+  }
+
+  function addFishRow() {
+    var e = ensureEntry();
+    var list = ensureEditableCatches(e);
+    list.push({ fish: '', qty: 1, lure: '', customCoords: '' });
+    renderDetail();
+  }
+
+  async function updateCatchField(idx, field, val, rerender) {
+    var e = ensureEntry();
+    var list = ensureEditableCatches(e);
+    if (!list[idx]) return;
+    list[idx][field] = val;
+    syncLegacyFields(e);
+    await persist(e);
+    renderCal();
+    if (rerender) renderDetail();
+  }
+
+  async function changeFishQty(idx, delta) {
+    var e = ensureEntry();
+    var list = ensureEditableCatches(e);
+    if (!list[idx]) return;
+    list[idx].qty = Math.max(1, (Number(list[idx].qty) || 1) + delta);
+    syncLegacyFields(e);
+    await persist(e);
+    renderCal();
+    renderDetail();
+  }
+
+  async function removeFishRow(idx) {
+    var e = ensureEntry();
+    var list = ensureEditableCatches(e);
+    list.splice(idx, 1);
+    syncLegacyFields(e);
+    await persist(e);
+    renderCal();
+    renderDetail();
+  }
+
+  async function toggleMode(val) {
+    var e = ensureEntry();
+    e.mode = (e.mode === val) ? '' : val;
+    $('#mode-riva').setAttribute('aria-pressed', String(e.mode === 'riva'));
+    $('#mode-barca').setAttribute('aria-pressed', String(e.mode === 'barca'));
+    await persist(e);
+    renderCal();
+  }
+
+  var coordTimers = {};
+  function onCatchCoordsInput(idx, val) {
+    var e = ensureEntry();
+    var list = ensureEditableCatches(e);
+    if (!list[idx]) return;
+    list[idx].customCoords = val;
+    syncLegacyFields(e);
+    if (idx === 0) {
+      var trimmed = val.trim();
+      var link = $('#maps-link');
+      if (link) {
+        link.href = 'https://www.google.com/maps?q=' + (trimmed ? encodeURIComponent(trimmed) : (ZONES[S.zone].lat + ',' + ZONES[S.zone].lon));
+      }
+    }
+    clearTimeout(coordTimers[idx]);
+    coordTimers[idx] = setTimeout(async function () { await persist(e); renderCal(); }, 450);
+  }
+
+  function fillCatchGPS(idx) {
+    if (!navigator.geolocation) {
+      toast('GPS non supportato su questo dispositivo.');
+      return;
+    }
+    if (window.location && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      toast('Il GPS richiede connessione HTTPS. Apri l\'app dal link HTTPS.');
+      return;
+    }
+    toast('Richiesta autorizzazione GPS...');
+    var saved = false;
+    var onSuccess = async function (pos) {
+      if (saved) return;
+      saved = true;
+      var val = pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5);
+      var e = ensureEntry();
+      var list = ensureEditableCatches(e);
+      if (!list[idx]) return;
+      list[idx].customCoords = val;
+      syncLegacyFields(e);
+      await persist(e);
+      renderCal();
+      renderDetail();
+      toast('Coordinate GPS salvate!');
+    };
+    navigator.geolocation.getCurrentPosition(
+      onSuccess,
+      function (err) {
+        if (err && err.code === 1) {
+          toast('Permesso GPS negato: abilita Posizione per l\'app/browser nelle Impostazioni Android.');
+          return;
+        }
+        // Fallback con precisione rete/Wi-Fi se il fix satellitare va in timeout o non è disponibile
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          function (err2) {
+            if (err2 && err2.code === 1) {
+              toast('Permesso GPS negato: abilita Posizione nelle Impostazioni del telefono.');
+            } else if (err2 && err2.code === 3) {
+              toast('Segnale GPS debole (timeout). Attiva la Posizione sul telefono e riprova.');
+            } else {
+              toast('Posizione non disponibile (cod. ' + (err2 ? err2.code : '?') + '). Verifica che la Posizione sia attiva.');
+            }
+          },
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }
+
+  var noteTimer;
+  function onNote(ev) {
+    var e = ensureEntry(); e.note = ev.target.value;
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(async function () { await persist(e); renderCal(); }, 450);
+  }
+  function fmtDur() {
+    var f = $('#t-from').value, t = $('#t-to').value, el = $('#dur');
+    if (!f || !t) { el.textContent = ''; return; }
+    var a = f.split(':'), b = t.split(':');
+    var m = (Number(b[0]) * 60 + Number(b[1])) - (Number(a[0]) * 60 + Number(a[1]));
+    if (m <= 0) m += 1440;
+    el.textContent = 'Durata ' + Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+  }
+  async function onTime() {
+    var e = ensureEntry(); e.from = $('#t-from').value; e.to = $('#t-to').value;
+    fmtDur(); await persist(e); renderCal();
+  }
+  async function removeEntry(date) {
+    S.entries.delete(date); await store.del(date); renderCal(); renderDetail(); toast('Giornata eliminata');
+  }
+  async function shrink(file) {
+    var bmp;
+    try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+    catch (e) {
+      bmp = await new Promise(function (res, rej) { var i = new Image(); i.onload = function () { res(i); }; i.onerror = rej; i.src = URL.createObjectURL(file); });
+    }
+    var w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight, k = Math.min(1, 1400 / Math.max(w, h));
+    var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return new Promise(function (res, rej) { c.toBlob(function (b) { b ? res(b) : rej(new Error('blob')); }, 'image/jpeg', .82); });
+  }
+  async function addFiles(files) {
+    var e = ensureEntry(), bad = 0;
+    for (var i = 0; i < files.length; i++) {
+      try { e.photos.push({ id: uid(), blob: await shrink(files[i]) }); } catch (err) { bad++; }
+    }
+    await persist(e); renderCal(); renderDetail();
+    if (bad) toast(bad + (bad === 1 ? ' foto non leggibile' : ' foto non leggibili'));
+  }
+
+  /* ---------- EXPORT CSV & BACKUP JSON ---------- */
+  function csvCell(val) {
+    var s = val == null ? '' : String(val);
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+
+  function exportCSV() {
+    if (!S.entries.size) {
+      toast('Nessuna uscita salvata da esportare.');
+      return;
+    }
+    var headers = [
+      'Data', 'Zona', 'Modalita', 'Dettaglio_Catture', 'Totale_Catture', 'Esche_Usate', 'Coordinate_Spot',
+      'Ora_Inizio', 'Ora_Fine', 'Alba', 'Tramonto', 'Luna', 'Illuminazione_Luna',
+      'Temp_Max_C', 'Temp_Min_C', 'Vento_kmh',
+      'Direzione_Vento', 'Pressione_hPa', 'Onde_m', 'Acqua_C', 'Num_Foto', 'Note'
+    ];
+    var rows = [headers.join(';')];
+    var sorted = Array.from(S.entries.values()).sort(function (a, b) { return a.date.localeCompare(b.date); });
+    sorted.forEach(function (e) {
+      var w = e.wx || {};
+      var moon = getMoonInfo(e.date);
+      var zObj = ZONES[e.zone] || ZONES.corsini;
+      var sunInfo = calcSunTimes(e.date, zObj.lat, zObj.lon);
+      var zName = (ZONES[e.zone] && ZONES[e.zone].name) || e.zone || '';
+      var modeLabel = e.mode === 'barca' ? 'In barca' : (e.mode === 'riva' ? 'Da riva' : '');
+      var cList = getEntryCatches(e);
+      var fishSummary = cList.map(function (c) {
+        var parts = [];
+        if (c.fish) parts.push(capFirst(c.fish) + ' ×' + c.qty);
+        if (c.lure) parts.push('esca: ' + capFirst(c.lure));
+        if (c.customCoords && c.customCoords.trim()) parts.push('spot: ' + c.customCoords.trim());
+        return parts.join(' - ');
+      }).filter(Boolean).join(' | ');
+      var totalFish = cList.reduce(function (acc, c) { return c.fish ? acc + c.qty : acc; }, 0);
+      var luresSummary = cList.map(function (c) { return capFirst(c.lure || ''); }).filter(Boolean).join(', ');
+      var coordsSummary = cList.map(function (c) { return (c.customCoords || '').trim(); }).filter(Boolean).join(' | ');
+      var line = [
+        csvCell(e.date),
+        csvCell(zName),
+        csvCell(modeLabel),
+        csvCell(fishSummary),
+        csvCell(totalFish || ''),
+        csvCell(luresSummary),
+        csvCell(coordsSummary),
+        csvCell(e.from || ''),
+        csvCell(e.to || ''),
+        csvCell((w && w.sunrise) || sunInfo.sunrise),
+        csvCell((w && w.sunset) || sunInfo.sunset),
+        csvCell(moon.name),
+        csvCell(moon.illum + '%'),
+        csvCell(w.tmax != null ? num(w.tmax, 1) : ''),
+        csvCell(w.tmin != null ? num(w.tmin, 1) : ''),
+        csvCell(w.wind != null ? num(w.wind, 0) : ''),
+        csvCell(w.dir != null ? card(w.dir) : ''),
+        csvCell(w.pres != null ? num(w.pres, 0) : ''),
+        csvCell(w.wave != null ? num(w.wave, 1) : ''),
+        csvCell(w.sea != null ? num(w.sea, 1) : ''),
+        csvCell(e.photos ? e.photos.length : 0),
+        csvCell(e.note || '')
+      ];
+      rows.push(line.join(';'));
+    });
+    var csvContent = '\uFEFF' + rows.join('\r\n');
+    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'diario-pesca-' + TODAY + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    toast('Tabella CSV esportata (' + sorted.length + ' uscite)');
+  }
+
+  function blobToDataURL(blob) {
+    return new Promise(function (res, rej) {
+      var r = new FileReader();
+      r.onload = function () { res(r.result); };
+      r.onerror = rej;
+      r.readAsDataURL(blob);
+    });
+  }
+  async function dataURLToBlob(dataUrl) {
+    var r = await fetch(dataUrl);
+    return await r.blob();
+  }
+
+  async function exportBackup() {
+    if (!S.entries.size) {
+      toast('Nessuna uscita salvata da esportare.');
+      return;
+    }
+    toast('Preparazione backup in corso...');
+    try {
+      var out = [];
+      var entriesArr = Array.from(S.entries.values());
+      for (var i = 0; i < entriesArr.length; i++) {
+        var e = entriesArr[i];
+        var photosData = [];
+        if (e.photos && e.photos.length) {
+          for (var j = 0; j < e.photos.length; j++) {
+            var ph = e.photos[j];
+            var b64 = await blobToDataURL(ph.blob);
+            photosData.push({ id: ph.id, dataUrl: b64 });
+          }
+        }
+        out.push({
+          date: e.date,
+          zone: e.zone || 'corsini',
+          mode: e.mode || '',
+          fish: e.fish || '',
+          catches: getEntryCatches(e),
+          lure: e.lure || '',
+          customCoords: e.customCoords || '',
+          note: e.note || '',
+          from: e.from || '',
+          to: e.to || '',
+          wx: e.wx || null,
+          photos: photosData
+        });
+      }
+      var prefsOut = [];
+      S.fishPrefs.forEach(function (p) {
+        if ((p.fav && p.fav.length) || (p.unfav && p.unfav.length)) {
+          prefsOut.push({ fish: p.fish, fav: p.fav || [], unfav: p.unfav || [] });
+        }
+      });
+      var payload = {
+        app: 'Diario di Pesca',
+        version: 15,
+        exportedAt: new Date().toISOString(),
+        entries: out,
+        fishPrefs: prefsOut
+      };
+      var jsonStr = JSON.stringify(payload);
+      var blob = new Blob([jsonStr], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'diario-pesca-backup-' + TODAY + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      toast('Backup esportato (' + out.length + ' uscite)');
+    } catch (err) {
+      toast('Errore durante l\'esportazione del backup.');
+    }
+  }
+
+  async function importBackup(file) {
+    toast('Importazione backup in corso...');
+    try {
+      var text = await file.text();
+      var data = JSON.parse(text);
+      if (!data || !Array.isArray(data.entries)) {
+        throw new Error('Formato non valido');
+      }
+      var count = 0;
+      for (var i = 0; i < data.entries.length; i++) {
+        var raw = data.entries[i];
+        if (!raw.date || raw.sample) continue;
+        var photos = [];
+        if (Array.isArray(raw.photos)) {
+          for (var j = 0; j < raw.photos.length; j++) {
+            var p = raw.photos[j];
+            if (p && p.dataUrl) {
+              var blob = await dataURLToBlob(p.dataUrl);
+              photos.push({ id: p.id || uid(), blob: blob });
+            }
+          }
+        }
+        var importedCatches = Array.isArray(raw.catches) && raw.catches.length
+          ? raw.catches.filter(function (c) { return c && (c.fish || c.lure || c.customCoords); }).map(function (c) {
+              return normalizeCatchItem(c, raw.lure, raw.customCoords);
+            })
+          : ((raw.fish || raw.lure || raw.customCoords) ? [normalizeCatchItem({ fish: raw.fish || '', qty: 1 }, raw.lure, raw.customCoords)] : []);
+        var firstFishObj = importedCatches.find(function (c) { return c.fish; });
+        var entry = {
+          date: raw.date,
+          zone: raw.zone || 'corsini',
+          mode: raw.mode || '',
+          fish: firstFishObj ? firstFishObj.fish : (raw.fish || ''),
+          catches: importedCatches,
+          lure: importedCatches.length ? (importedCatches[0].lure || '') : (raw.lure || ''),
+          customCoords: importedCatches.length ? (importedCatches[0].customCoords || '') : (raw.customCoords || ''),
+          note: raw.note || '',
+          from: raw.from || '',
+          to: raw.to || '',
+          wx: raw.wx || null,
+          photos: photos
+        };
+        S.entries.set(entry.date, entry);
+        await store.put(entry);
+        count++;
+      }
+      if (Array.isArray(data.fishPrefs)) {
+        for (var k = 0; k < data.fishPrefs.length; k++) {
+          var fp = data.fishPrefs[k];
+          if (fp && fp.fish) {
+            var normPref = {
+              fish: fp.fish,
+              fav: Array.isArray(fp.fav) ? fp.fav : [],
+              unfav: Array.isArray(fp.unfav) ? fp.unfav : []
+            };
+            S.fishPrefs.set(normPref.fish, normPref);
+            await store.putPref(normPref);
+          }
+        }
+      }
+      renderCal();
+      renderDetail();
+      renderFishWinds();
+      toast('Importate ' + count + ' uscite con successo!');
+    } catch (err) {
+      toast('File di backup non valido o danneggiato.');
+    }
+  }
+
+  $('#btn-export-csv').addEventListener('click', exportCSV);
+  $('#btn-export').addEventListener('click', exportBackup);
+  $('#btn-import').addEventListener('click', function () { $('#import-file').click(); });
+  $('#import-file').addEventListener('change', function (ev) {
+    var f = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (f) importBackup(f);
+  });
+
+  /* ---------- visore foto ---------- */
+  var lbId = null;
+  function openLb(id) {
+    var e = S.entries.get(S.sel), ph = e && e.photos.find(function (p) { return p.id === id; });
+    if (!ph) return;
+    lbId = id; $('#lb-img').src = urlFor(ph); $('#lb').hidden = false; $('#lb-close').focus();
+    var d = $('#lb-del'); d.textContent = 'Elimina foto'; delete d.dataset.armed;
+  }
+  function closeLb() { $('#lb').hidden = true; lbId = null; }
+  $('#lb-close').addEventListener('click', closeLb);
+  $('#lb-del').addEventListener('click', async function () {
+    var d = $('#lb-del');
+    if (!d.dataset.armed) { d.dataset.armed = '1'; d.textContent = 'Tocca ancora per confermare'; return; }
+    var e = S.entries.get(S.sel); if (!e) return closeLb();
+    e.photos = e.photos.filter(function (p) { return p.id !== lbId; });
+    closeLb(); await persist(e); renderCal(); renderDetail();
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('#lb').hidden) closeLb(); });
+
+  /* ---------- eventi ---------- */
+  function setView(view) {
+    var isCal = view === 'cal';
+    var isWinds = view === 'winds';
+    var isFish = view === 'fish';
+    $('#tab-cal').setAttribute('aria-pressed', String(isCal));
+    $('#tab-winds').setAttribute('aria-pressed', String(isWinds));
+    $('#tab-fish').setAttribute('aria-pressed', String(isFish));
+    $('#view-cal').hidden = !isCal;
+    $('#view-winds').hidden = !isWinds;
+    $('#view-fish').hidden = !isFish;
+    if (isWinds) renderWinds();
+    if (isFish) renderFishWinds();
+  }
+  $('#tab-cal').addEventListener('click', function () { setView('cal'); });
+  $('#tab-winds').addEventListener('click', function () { setView('winds'); });
+  $('#tab-fish').addEventListener('click', function () { setView('fish'); });
+
+  $('#view-fish').addEventListener('click', function (ev) {
+    var addBtn = ev.target.closest('.fw-add');
+    if (addBtn) {
+      var fish = addBtn.dataset.fish;
+      var kind = addBtn.dataset.kind;
+      var group = addBtn.closest('.wind-group');
+      var sel = group && group.querySelector('.fw-sel');
+      if (sel && sel.value) addFishWind(fish, kind, sel.value);
+      return;
+    }
+    var remBtn = ev.target.closest('.fw-rem');
+    if (remBtn) {
+      removeFishWind(remBtn.dataset.fish, remBtn.dataset.kind, remBtn.dataset.code);
+    }
+  });
+
+  async function refresh() { await ensureWeather(S.zone, S.y, S.m); renderCal(); renderDetail(); renderWinds(); renderFishWinds(); }
+  function setZone(z) {
+    S.zone = z;
+    $('#z-corsini').setAttribute('aria-pressed', String(z === 'corsini'));
+    $('#z-pila').setAttribute('aria-pressed', String(z === 'pila'));
+    var e = S.entries.get(S.sel); if (e && e.zone !== z) { e.zone = z; persist(e); }
+    return refresh();
+  }
+  $('#z-corsini').addEventListener('click', function () { setZone('corsini'); });
+  $('#z-pila').addEventListener('click', function () { setZone('pila'); });
+  function shift(n) { var d = new Date(S.y, S.m - 1 + n, 1); S.y = d.getFullYear(); S.m = d.getMonth() + 1; return refresh(); }
+  $('#prev').addEventListener('click', function () { shift(-1); });
+  $('#next').addEventListener('click', function () { shift(1); });
+  $('#goto-today').addEventListener('click', function () { var d = new Date(); S.y = d.getFullYear(); S.m = d.getMonth() + 1; S.sel = TODAY; refresh(); });
+  $('#grid').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.day'); if (!b) return;
+    S.sel = b.dataset.date;
+    var e = S.entries.get(S.sel);
+    if (e && e.zone && e.zone !== S.zone) { setZone(e.zone); return; }
+    renderCal(); renderDetail();
+    $('#detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  $('#file').addEventListener('change', function (ev) {
+    var f = Array.from(ev.target.files || []); ev.target.value = '';
+    if (f.length) addFiles(f);
+  });
+
+  /* ---------- Service Worker (PWA) ---------- */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').then(function (reg) {
+        if (reg && reg.update) reg.update().catch(function () {});
+      }).catch(function () {});
+    });
+  }
+
+  /* ---------- avvio ---------- */
+  (async function init() {
+    await store.open();
+    var list = [];
+    try { list = await store.all(); } catch (e) { list = []; }
+    for (var i = 0; i < list.length; i++) {
+      var e = list[i];
+      if (e.sample) {
+        try { await store.del(e.date); } catch (err) {}
+      } else {
+        S.entries.set(e.date, e);
+      }
+    }
+    var prefs = [];
+    try { prefs = await store.allPrefs(); } catch (e) { prefs = []; }
+    for (var j = 0; j < prefs.length; j++) {
+      if (prefs[j] && prefs[j].fish) S.fishPrefs.set(prefs[j].fish, prefs[j]);
+    }
+    await refresh();
+  })();
+})();
+</script>
+
+</body>
+</html>

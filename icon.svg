@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F8291"/>
+      <stop offset="55%" stop-color="#0A505B"/>
+      <stop offset="100%" stop-color="#062930"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="0.72" cy="0.28" r="0.55">
+      <stop offset="0%" stop-color="#F6B25E" stop-opacity="0.42"/>
+      <stop offset="60%" stop-color="#52C3D2" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#062930" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fishGrad" x1="0" y1="0" x2="1" y2="0.8">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="65%" stop-color="#DDF1F4"/>
+      <stop offset="100%" stop-color="#8ED6E0"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFD089"/>
+      <stop offset="100%" stop-color="#E58524"/>
+    </linearGradient>
+    <linearGradient id="waveGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#52C3D2" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#04181C" stop-opacity="0.75"/>
+    </linearGradient>
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#031317" flood-opacity="0.5"/>
+    </filter>
+    <clipPath id="squircle">
+      <rect width="512" height="512" rx="116"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#squircle)">
+    <rect width="512" height="512" fill="url(#bgGrad)"/>
+    <rect width="512" height="512" fill="url(#sunGlow)"/>
+
+    <circle cx="256" cy="244" r="176" fill="none" stroke="#52C3D2" stroke-width="2.5" stroke-opacity="0.28"/>
+    <circle cx="256" cy="244" r="152" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="4 10" stroke-opacity="0.22"/>
+    <path d="M256 54v22M256 412v22M66 244h22M424 244h22" stroke="#F6B25E" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    <path d="M122 110l12 12M378 366l12 12M390 110l-12 12M134 366l-12 12" stroke="#52C3D2" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+
+    <path d="M0 356 Q 128 320, 256 356 T 512 356 L 512 512 L 0 512 Z" fill="url(#waveGrad)"/>
+    <path d="M0 396 Q 140 368, 280 398 T 512 392 L 512 512 L 0 512 Z" fill="#051D22" opacity="0.55"/>
+    <path d="M24 352 Q 136 324, 256 352 T 488 350" fill="none" stroke="#7CE0ED" stroke-width="3.5" stroke-linecap="round" opacity="0.45"/>
+
+    <g filter="url(#softShadow)" transform="rotate(-14 256 244)">
+      <path d="M214 188 L254 148 L286 184 Z" fill="url(#goldGrad)"/>
+      <path d="M218 272 L248 310 L264 274 Z" fill="url(#goldGrad)"/>
+      <path d="M114 242 C154 182, 246 172, 326 218 L394 176 L372 242 L398 304 L326 264 C248 308, 154 298, 114 242 Z" fill="url(#fishGrad)"/>
+      <path d="M174 206 C192 228, 192 256, 174 276" fill="none" stroke="#0C6A77" stroke-width="5" stroke-linecap="round" opacity="0.65"/>
+      <path d="M196 238 Q 260 228, 322 240" fill="none" stroke="#52C3D2" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+      <circle cx="156" cy="232" r="13" fill="#071C21"/>
+      <circle cx="152" cy="228" r="4.5" fill="#FFFFFF"/>
+    </g>
+
+    <rect x="6" y="6" width="500" height="500" rx="112" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-opacity="0.16"/>
+  </g>
+</svg>
